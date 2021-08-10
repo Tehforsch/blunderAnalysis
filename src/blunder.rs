@@ -1,8 +1,10 @@
+use std::hash::Hash;
+
 use serde::{Deserialize, Serialize};
 
 use crate::evaluation::Evaluation;
 
-#[derive(Serialize, Deserialize, Hash, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Blunder {
     pub position: String,
     pub move_: String,
@@ -18,4 +20,10 @@ impl PartialEq for Blunder {
 
 impl Eq for Blunder {
     fn assert_receiver_is_total_eq(&self) {}
+}
+
+impl Hash for Blunder {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.position.hash(state);
+    }
 }

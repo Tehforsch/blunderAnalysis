@@ -25,7 +25,7 @@ pub struct AnalysisThread {
 }
 
 impl AnalysisThread {
-    pub fn start<'a>(game_pgn: &'a str, scan_opts: &ScanOpts) -> AnalysisThreadHandle {
+    pub fn start(game_pgn: &str, scan_opts: &ScanOpts) -> AnalysisThreadHandle {
         let (result_sender, result_receiver) = channel();
         let analysis_thread = AnalysisThread {
             sender: result_sender,

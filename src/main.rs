@@ -58,7 +58,7 @@ fn scan(mut database: Database, database_path: &Path, opts: ScanOpts) -> Result<
                 threads.push(AnalysisThread::start(game_str, &opts));
             }
         }
-        if threads.len() == 0 {
+        if threads.is_empty() {
             break;
         }
         for mut thread in threads.iter_mut() {
@@ -80,8 +80,8 @@ fn scan(mut database: Database, database_path: &Path, opts: ScanOpts) -> Result<
     Ok(())
 }
 
-fn split_pgns_into_games<'a>(pgns: &'a String) -> Box<dyn Iterator<Item = &'a str> + 'a> {
-    Box::new(pgns.split("\n\n\n").into_iter())
+fn split_pgns_into_games<'a>(pgns: &'a str) -> Box<dyn Iterator<Item = &'a str> + 'a> {
+    Box::new(pgns.split("\n\n\n"))
 }
 
 fn show_blunders(database: Database) -> Result<()> {

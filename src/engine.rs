@@ -13,6 +13,7 @@ pub struct Engine {
     child: RefCell<Child>,
 }
 
+// Copied and modified from the uci crate https://crates.io/crates/uci
 impl Engine {
     pub fn new(path: &str) -> Result<Engine> {
         let cmd = Command::new(path)
@@ -77,14 +78,14 @@ impl Engine {
         let mut buf: Vec<u8> = vec![0];
 
         loop {
-            self.child
+            let _ = self.child
                 .borrow_mut()
                 .stdout
                 .as_mut()
                 .unwrap()
                 .read(&mut buf)?;
             s.push(buf[0] as char);
-            if buf[0] == '\n' as u8 {
+            if buf[0] == b'\n' {
                 break;
             }
         }
