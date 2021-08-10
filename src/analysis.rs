@@ -1,5 +1,5 @@
 use anyhow::Result;
-use pgnparse::parser::{parse_pgn_to_rust_struct, PgnInfo};
+use pgnparse::parser::PgnInfo;
 
 use regex::Regex;
 use std::sync::mpsc::{channel, Receiver, Sender};
@@ -12,6 +12,7 @@ use crate::config::{ACCURATE_DEPTH, BLUNDER_CENTIPAWN_LOSS, DEFAULT_DEPTH, NUM_M
 use crate::engine::Engine;
 use crate::evaluation::Evaluation;
 use crate::game::Game;
+use crate::game_info::GameInfo;
 use crate::Color;
 
 pub struct AnalysisThreadHandle {
@@ -25,14 +26,13 @@ pub struct AnalysisThread {
 }
 
 impl AnalysisThread {
-    pub fn start(game_info: PgnInfo, scan_opts: &ScanOpts) -> AnalysisThreadHandle {
+    pub fn start(game_info: GameInfo, scan_opts: &ScanOpts) -> AnalysisThreadHandle {
         let (result_sender, result_receiver) = channel();
         let analysis_thread = AnalysisThread {
             sender: result_sender,
         };
         let scan_opts_cloned = scan_opts.clone();
-        let handle =
-            thread::spawn(move || analysis_thread.run(game_info, &scan_opts_cloned));
+        let handle = thread::spawn(move || analysis_thread.run(game_info, &scan_opts_cloned));
         AnalysisThreadHandle {
             handle,
             receiver: result_receiver,
@@ -40,16 +40,16 @@ impl AnalysisThread {
         }
     }
 
-    fn run(self, game_info: PgnInfo, scan_opts: &ScanOpts) -> Result<()> {
-        let id = get_game_id(&game_info);
-        let blunders = find_blunders(&game_info, scan_opts.num_moves, &scan_opts.player_name)?;
-        self.sender.send(Game { id, blunders }).unwrap();
+    fn run(self, game_info: GameInfo, scan_opts: &ScanOpts) -> Result<()> {
+        let blunders = find_blunders(&game_info.info, scan_opts.num_moves, &scan_opts.player_name)?;
+        self.sender
+            .send(Game {
+                id: game_info.get_id(),
+                blunders,
+            })
+            .unwrap();
         Ok(())
     }
-}
-
-pub fn get_game_id(game_pgn: &PgnInfo) -> String {
-    game_pgn.headers["Site"].clone()
 }
 
 pub fn find_blunders(

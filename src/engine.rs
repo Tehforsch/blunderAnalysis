@@ -78,7 +78,8 @@ impl Engine {
         let mut buf: Vec<u8> = vec![0];
 
         loop {
-            let _ = self.child
+            let _ = self
+                .child
                 .borrow_mut()
                 .stdout
                 .as_mut()

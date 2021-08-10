@@ -1,9 +1,8 @@
 use anyhow::{Context, Result};
-use pgnparse::parser::PgnInfo;
 use serde::{Deserialize, Serialize};
 use std::{fs, path::Path};
 
-use crate::{analysis::get_game_id, game::Game};
+use crate::{game::Game, game_info::GameInfo};
 
 #[derive(Serialize, Deserialize)]
 pub struct Database {
@@ -33,8 +32,8 @@ impl Database {
         fs::write(path, content).context("Writing database file contents")
     }
 
-    pub fn game_exists(&self, pgn_info: &PgnInfo) -> bool {
-        let game_id = get_game_id(&pgn_info);
-        self.games.iter().find(|game| game.id == game_id).is_none()
+    pub fn game_exists(&self, game_info: &GameInfo) -> bool {
+        let game_id = game_info.get_id();
+        self.games.iter().any(|game| game.id == game_id)
     }
 }
