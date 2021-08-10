@@ -1,6 +1,6 @@
-use std::{fs, path::Path};
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
+use std::{fs, path::Path};
 
 use crate::game::Game;
 
@@ -11,17 +11,14 @@ pub struct Database {
 
 impl Database {
     pub fn default() -> Self {
-        Database {
-            games: vec![],
-        }
+        Database { games: vec![] }
     }
 
     pub fn read(path: &Path) -> Result<Self> {
         let data = fs::read_to_string(path);
         if let Ok(data) = data {
             serde_yaml::from_str(&data).context("Reading database file contents")
-        }
-        else {
+        } else {
             Ok(Database::default())
         }
     }

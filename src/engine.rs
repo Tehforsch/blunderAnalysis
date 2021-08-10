@@ -1,19 +1,25 @@
-use std::{cell::RefCell, fmt, process::{Child, Command, Stdio}, thread, time::Duration};
-use std::io::Write;
-use std::io::Read;
 use anyhow::Result;
+use std::io::Read;
+use std::io::Write;
+use std::{
+    cell::RefCell,
+    fmt,
+    process::{Child, Command, Stdio},
+    thread,
+    time::Duration,
+};
 
 pub struct Engine {
-    child: RefCell<Child>
+    child: RefCell<Child>,
 }
 
 impl Engine {
     pub fn new(path: &str) -> Result<Engine> {
         let cmd = Command::new(path)
-                            .stdin(Stdio::piped())
-                            .stdout(Stdio::piped())
-                            .spawn()
-                            .expect("Unable to run engine");
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .expect("Unable to run engine");
 
         let res = Engine {
             child: RefCell::new(cmd),
@@ -28,7 +34,7 @@ impl Engine {
     pub fn set_position(&self, fen: &str) -> Result<()> {
         self.write_fmt(format_args!("position fen {}\n", fen))
     }
-    
+
     pub fn command(&self, cmd: &str) -> Result<String> {
         self.write_fmt(format_args!("{}\n", cmd.trim()))?;
         thread::sleep(Duration::from_millis(20));
@@ -49,7 +55,7 @@ impl Engine {
             let next_line = self.read_line()?;
             match next_line.trim() {
                 "readyok" => return Ok(s.join("\n")),
-                other     => s.push(other.to_string())
+                other => s.push(other.to_string()),
             }
         }
     }
@@ -60,8 +66,8 @@ impl Engine {
         loop {
             let next_line = self.read_line()?;
             s.push(next_line.to_string());
-            if next_line.contains("bestmove") { 
-                return Ok(s.join("\n"))
+            if next_line.contains("bestmove") {
+                return Ok(s.join("\n"));
             }
         }
     }
@@ -71,17 +77,27 @@ impl Engine {
         let mut buf: Vec<u8> = vec![0];
 
         loop {
-            self.child.borrow_mut().stdout.as_mut().unwrap().read(&mut buf)?;
+            self.child
+                .borrow_mut()
+                .stdout
+                .as_mut()
+                .unwrap()
+                .read(&mut buf)?;
             s.push(buf[0] as char);
             if buf[0] == '\n' as u8 {
-                break
+                break;
             }
         }
         Ok(s)
     }
 
     fn write_fmt(&self, args: fmt::Arguments) -> Result<()> {
-        self.child.borrow_mut().stdin.as_mut().unwrap().write_fmt(args)?;
+        self.child
+            .borrow_mut()
+            .stdin
+            .as_mut()
+            .unwrap()
+            .write_fmt(args)?;
         Ok(())
     }
 }

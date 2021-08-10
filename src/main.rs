@@ -1,31 +1,31 @@
-pub mod args;
-pub mod engine;
-pub mod database;
-pub mod blunder;
-pub mod game;
-pub mod evaluation;
 pub mod analysis;
+pub mod args;
+pub mod blunder;
 pub mod config;
+pub mod database;
+pub mod engine;
+pub mod evaluation;
+pub mod game;
 
 use std::fs;
 use std::path::Path;
 use std::time::Duration;
 
 use analysis::{AnalysisThread, AnalysisThreadHandle};
-use config::NUM_THREADS;
-use counter::Counter;
 use anyhow::Result;
 use args::Command;
 use blunder::Blunder;
-use database::Database;
 use clap::Clap;
+use config::NUM_THREADS;
+use counter::Counter;
+use database::Database;
 
 use crate::args::{Args, ScanOpts};
 
 #[derive(PartialEq, Eq)]
 enum Color {
     White,
-    Black
+    Black,
 }
 
 impl Color {
@@ -33,7 +33,7 @@ impl Color {
         let color = match move_num.rem_euclid(2) {
             0 => Color::White,
             1 => Color::Black,
-            _ => panic!("Impossible value")
+            _ => panic!("Impossible value"),
         };
         &color == self
     }
@@ -52,7 +52,7 @@ fn scan(mut database: Database, database_path: &Path, opts: ScanOpts) -> Result<
     let pgns_string = fs::read_to_string(&opts.pgn_file)?;
     let mut game_pgns = split_pgns_into_games(&pgns_string);
     let mut threads: Vec<AnalysisThreadHandle> = vec![];
-    loop { 
+    loop {
         if threads.len() < NUM_THREADS {
             if let Some(game_str) = game_pgns.next() {
                 threads.push(AnalysisThread::start(game_str, &opts));
@@ -70,7 +70,8 @@ fn scan(mut database: Database, database_path: &Path, opts: ScanOpts) -> Result<
                 thread.finished = true;
             }
         }
-        let (finished_threads, running_threads): (Vec<_>, Vec<_>) = threads.into_iter().partition(|thread| thread.finished);
+        let (finished_threads, running_threads): (Vec<_>, Vec<_>) =
+            threads.into_iter().partition(|thread| thread.finished);
         for finished_thread in finished_threads.into_iter() {
             finished_thread.handle.join().unwrap().unwrap();
         }
@@ -84,11 +85,18 @@ fn split_pgns_into_games<'a>(pgns: &'a String) -> Box<dyn Iterator<Item = &'a st
 }
 
 fn show_blunders(database: Database) -> Result<()> {
-    let all_blunders: Vec<&Blunder> = database.games.iter().flat_map(|game| game.blunders.iter()).collect();
+    let all_blunders: Vec<&Blunder> = database
+        .games
+        .iter()
+        .flat_map(|game| game.blunders.iter())
+        .collect();
     let counter = all_blunders.iter().collect::<Counter<_>>();
     for (blunder, count) in counter.iter() {
         if *count > 1 {
-            println!("In position: {}\n you played {}", blunder.position, blunder.move_);
+            println!(
+                "In position: {}\n you played {}",
+                blunder.position, blunder.move_
+            );
         }
     }
     Ok(())
