@@ -1,11 +1,16 @@
 [package]
-name = "blunderAnalysis"
+name = "blunder_analysis"
 version = "0.1.0"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = "1.0.42"
 clap = "3.0.0-beta.2"
+counter = "0.5.2"
 pgnparse = "0.1.15"
+regex = "1.5.4"
+serde = "1.0.127"
+serde_yaml = "0.8.17"
 uci = "0.1.2"
