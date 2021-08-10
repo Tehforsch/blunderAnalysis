@@ -17,7 +17,7 @@ pub enum Command {
     Show,
 }
 
-#[derive(Clap, Debug)]
+#[derive(Clap, Debug, Clone)]
 pub struct ScanOpts {
     pub pgn_file: PathBuf,
     pub num_moves: usize,
