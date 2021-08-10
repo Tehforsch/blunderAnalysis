@@ -25,15 +25,14 @@ pub struct AnalysisThread {
 }
 
 impl AnalysisThread {
-    pub fn start(game_pgn: &str, scan_opts: &ScanOpts) -> AnalysisThreadHandle {
+    pub fn start(game_info: PgnInfo, scan_opts: &ScanOpts) -> AnalysisThreadHandle {
         let (result_sender, result_receiver) = channel();
         let analysis_thread = AnalysisThread {
             sender: result_sender,
         };
         let scan_opts_cloned = scan_opts.clone();
-        let game_pgn_cloned = game_pgn.to_owned();
         let handle =
-            thread::spawn(move || analysis_thread.run(&game_pgn_cloned, &scan_opts_cloned));
+            thread::spawn(move || analysis_thread.run(game_info, &scan_opts_cloned));
         AnalysisThreadHandle {
             handle,
             receiver: result_receiver,
@@ -41,8 +40,7 @@ impl AnalysisThread {
         }
     }
 
-    fn run(self, game_pgn: &str, scan_opts: &ScanOpts) -> Result<()> {
-        let game_info = parse_pgn_to_rust_struct(game_pgn);
+    fn run(self, game_info: PgnInfo, scan_opts: &ScanOpts) -> Result<()> {
         let id = get_game_id(&game_info);
         let blunders = find_blunders(&game_info, scan_opts.num_moves, &scan_opts.player_name)?;
         self.sender.send(Game { id, blunders }).unwrap();
@@ -50,7 +48,7 @@ impl AnalysisThread {
     }
 }
 
-fn get_game_id(game_pgn: &PgnInfo) -> String {
+pub fn get_game_id(game_pgn: &PgnInfo) -> String {
     game_pgn.headers["Site"].clone()
 }
 

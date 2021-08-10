@@ -19,6 +19,7 @@ use clap::Clap;
 use config::NUM_THREADS;
 use counter::Counter;
 use database::Database;
+use pgnparse::parser::{PgnInfo, parse_pgn_to_rust_struct};
 
 use crate::args::{Args, ScanOpts};
 
@@ -50,12 +51,18 @@ fn main() -> Result<()> {
 
 fn scan(mut database: Database, database_path: &Path, opts: ScanOpts) -> Result<()> {
     let pgns_string = fs::read_to_string(&opts.pgn_file)?;
-    let mut game_pgns = split_pgns_into_games(&pgns_string);
+    let mut games: Vec<PgnInfo> = split_pgns_into_games(&pgns_string);
+    let (_, unseen_games) = games.into_iter().partition(|game| database.game_exists(game));
+    games = unseen_games;
+    let num_games = games.len();
     let mut threads: Vec<AnalysisThreadHandle> = vec![];
+    let mut num = 0;
     loop {
         if threads.len() < NUM_THREADS {
-            if let Some(game_str) = game_pgns.next() {
-                threads.push(AnalysisThread::start(game_str, &opts));
+            if let Some(game_info) = games.pop() {
+                num += 1;
+                println!("Analyzing {} / {}", num, num_games);
+                threads.push(AnalysisThread::start(game_info, &opts));
             }
         }
         if threads.is_empty() {
@@ -80,8 +87,8 @@ fn scan(mut database: Database, database_path: &Path, opts: ScanOpts) -> Result<
     Ok(())
 }
 
-fn split_pgns_into_games<'a>(pgns: &'a str) -> Box<dyn Iterator<Item = &'a str> + 'a> {
-    Box::new(pgns.split("\n\n\n"))
+fn split_pgns_into_games(pgns: &str) -> Vec<PgnInfo> {
+    Box::new(pgns.split("\n\n\n").map(|pgn_string| parse_pgn_to_rust_struct(pgn_string))).collect()
 }
 
 fn show_blunders(database: Database) -> Result<()> {
