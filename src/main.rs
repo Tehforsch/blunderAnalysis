@@ -54,11 +54,12 @@ fn main() -> Result<()> {
 fn scan(mut database: Database, database_path: &Path, opts: ScanOpts) -> Result<()> {
     let pgns_string = fs::read_to_string(&opts.pgn_file)?;
     let mut games: Vec<GameInfo> = split_pgns_into_games(&pgns_string);
-    let (_, unseen_games) = games
+    let num_games = games.len();
+    let (seen_games, unseen_games): (Vec<_>, Vec<_>) = games
         .into_iter()
         .partition(|game| database.game_exists(game));
+    println!("Skipping {} games that have already been analyzed.", seen_games.len());
     games = unseen_games;
-    let num_games = games.len();
     let mut threads: Vec<AnalysisThreadHandle> = vec![];
     let mut num = 0;
     loop {
