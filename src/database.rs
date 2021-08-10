@@ -1,6 +1,9 @@
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use std::{fs, path::{Path, PathBuf}};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 use crate::{game::Game, game_info::GameInfo};
 
@@ -12,7 +15,10 @@ pub struct Database {
 
 impl Database {
     pub fn empty(path: &Path) -> Self {
-        Database { games: vec![], path: path.to_owned() }
+        Database {
+            games: vec![],
+            path: path.to_owned(),
+        }
     }
 
     pub fn read(path: &Path) -> Result<Self> {
